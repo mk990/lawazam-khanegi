@@ -4,30 +4,39 @@ use Monolog\Handler\StreamHandler;
 use Monolog\Logger;
 use Monolog\Processor\UidProcessor;
 use Psr\Container\ContainerInterface;
+use Psr\Log\LoggerInterface;
 use Selective\BasePath\BasePathMiddleware;
 use Slim\App;
 use Slim\Factory\AppFactory;
 use Slim\Middleware\ErrorMiddleware;
 use Slim\Views\Twig;
+use Slim\Views\TwigMiddleware;
 
 return [
     'settings' => function () {
         return require __DIR__ . '/settings.php';
     },
 
-    'view' => function (ContainerInterface $container) {
-        return Twig::create(
-            $container->get('settings')['view']['path'],
-            ['cache' => $container->get('settings')['view']['cache']]
-        );
+    Twig::class => function (ContainerInterface $container) {
+        $settings     = $container->get('settings');
+        $twigSettings = $settings['twig'];
+
+        $options          = $twigSettings['options'];
+        $options['cache'] = $options['cache_enabled'] ? $options['cache_path'] : false;
+
+        $twig = Twig::create($twigSettings['paths'], $options);
+
+        // Add extension here
+        // ...
+
+        return $twig;
     },
 
-    'LOG' => function (ContainerInterface $container) {
-        $settings = $container->get('settings')['logger'];
-        $logger   = new Logger($settings['name']);
-        $logger->pushProcessor(new UidProcessor());
-        $logger->pushHandler(new StreamHandler($settings['path'], $settings['level']));
-
+    TwigMiddleware::class => function (ContainerInterface $container) {
+        return TwigMiddleware::createFromContainer(
+            $container->get(App::class),
+            Twig::class
+        );
     },
 
     App::class => function (ContainerInterface $container) {
@@ -53,16 +62,37 @@ return [
         return new BasePathMiddleware($container->get(App::class));
     },
 
-    PDO::class => function (ContainerInterface $container) {
-        $settings = $container->get('settings')['db'];
+    LoggerInterface::class => function (ContainerInterface $c) {
+        $settings = $c->get('settings');
 
-        $host     = $settings['host'];
-        $dbname   = $settings['database'];
+        $loggerSettings = $settings['logger'];
+        $logger         = new Logger($loggerSettings['name']);
+
+        $processor = new UidProcessor();
+        $logger->pushProcessor($processor);
+
+        $handler = new StreamHandler($loggerSettings['path'], $loggerSettings['level']);
+        $logger->pushHandler($handler);
+
+        return $logger;
+    },
+
+    PDO::class => function (ContainerInterface $container) {
+        $database = 'sqlite';
+        $settings = $container->get('settings')[$database];
         $username = $settings['username'];
         $password = $settings['password'];
-        $charset  = $settings['charset'];
         $flags    = $settings['flags'];
-        $dsn      = "mysql:host=$host;dbname=$dbname;charset=$charset";
+        if ($database == 'mysql') {
+            $dbname  = $settings['database'];
+            $host    = $settings['host'];
+            $charset = $settings['charset'];
+            $dsn     = "mysql:host=$host;dbname=$dbname;charset=$charset";
+        } else {
+            $path  = $settings['path'];
+            $dsn = "sqlite:$path";
+        }
+
 
         return new PDO($dsn, $username, $password, $flags);
     },

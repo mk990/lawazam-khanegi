@@ -7,9 +7,9 @@ require_once __DIR__ . '/../vendor/autoload.php';
 (Dotenv\Dotenv::createImmutable(dirname(__DIR__)))->load();
 
 
-function env($var): string
+function env($key): string
 {
-    return $_ENV[$var];
+    return $_ENV[$key];
 }
 
 $containerBuilder = new ContainerBuilder();

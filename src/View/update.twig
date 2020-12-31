@@ -1,0 +1,30 @@
+{% extends "base.twig" %}
+
+{% block content %}
+    <main>
+        <div class="container-fluid">
+            <h1 class="mt-4">داشبورد</h1>
+            <ol class="breadcrumb mb-4">
+                <li class="breadcrumb-item active">داشبورد</li>
+            </ol>
+
+            <div class="container border border-dark p-3">
+                <form class="" method="post" action="/update/{{ product.id }}">
+
+                    {% for key,item in product %}
+                        {% if key != 'id' and key != 'created_at' and key != 'updated_at' %}
+                            <div class="form-group">
+                                <label for="">
+                                    <input class="form-control" type="text" value="{{ item }}" name="{{ key }}">
+                                </label>
+                            </div>
+                        {% endif %}
+                    {% endfor %}
+
+                    <button type="submit" class="btn btn-primary">ارسال</button>
+                </form>
+            </div>
+
+        </div>
+    </main>
+{% endblock %}

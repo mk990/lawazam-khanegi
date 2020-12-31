@@ -14,8 +14,8 @@ $settings = [];
 
 // Path settings
 $settings['root']   = dirname(__DIR__);
-$settings['temp']   = $settings['root'] . '/tmp';
 $settings['public'] = $settings['root'] . '/public';
+$settings['src']    = $settings['root'] . '/src';
 
 // Error Handling Middleware settings
 $settings['error'] = [
@@ -31,20 +31,29 @@ $settings['error'] = [
     'log_error_details'     => true,
 ];
 
-$settings['view'] = [
-    'path'  => $settings['root'] . '/src/Views',
-    'cache' => env('APP_DEBUG') ? false : $settings['root'] . '/storage/cache',
+// Twig settings
+$settings['twig'] = [
+    // Template paths
+    'paths'   => [
+        $settings['src'] . '/View'
+    ],
+    // Twig environment options
+    'options' => [
+        // Should be set to true in production
+        'cache_enabled' => false,
+        'cache_path'    => $settings['root'] . '/cache/twig',
+    ],
 ];
 
 $settings['logger'] = [
     'name'  => env('APP_NAME'),
-    'path'  => $settings['root'] . '/storage/logs/app.log',
+    'path'  => isset($_ENV['docker']) ? 'php://stdout' : $settings['root'] . '/storage/logs/app.log',
     'level' => Logger::DEBUG,
 ];
 
 
 // Database settings
-$settings['db'] = [
+$settings['mysql'] = [
     'driver'    => 'mysql',
     'host'      => 'localhost',
     'username'  => 'root',
@@ -66,5 +75,23 @@ $settings['db'] = [
     ],
 ];
 
+$settings['sqlite'] = [
+    'driver'    => 'sqlite',
+    'path'      => __DIR__.'/../storage/db_file.sqlite3',
+    'username'  => '',
+    'password'  => '',
+    'flags'     => [
+        // Turn off persistent connections
+        PDO::ATTR_PERSISTENT         => false,
+        // Enable exceptions
+        PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
+        // Emulate prepared statements
+        PDO::ATTR_EMULATE_PREPARES   => true,
+        // Set default fetch mode to array
+        PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+        // Set character set
+        PDO::MYSQL_ATTR_INIT_COMMAND => 'SET NAMES utf8mb4 COLLATE utf8mb4_persian_ci'
+    ],
+];
 
 return $settings;

@@ -1,16 +1,18 @@
 <?php
 
-use App\Action\HomeAction;
-use App\Action\UserCreateAction;
-use Psr\Http\Message\ResponseInterface as Response;
-use Psr\Http\Message\ServerRequestInterface as Request;
+use App\Controller\HomeAction;
+use App\Controller\Product\ProductCreate;
+use App\Controller\Product\ProductDelete;
+use App\Controller\Product\ProductGetUpdate;
+use App\Controller\Product\ProductUpdate;
 use Slim\App;
 
 return function (App $app) {
-    $app->get('/', function (Request $request, Response $response, $args) {
-        return $this->get('view')->render($response, 'app.twig', [
-            'name' => $args['name']
-        ]);
-    })->setName('home');
+    $app->get('/', HomeAction::class);
 //    $app->post('/users', UserCreateAction::class);
+    $app->post('/create', ProductCreate::class);
+    $app->get('/update/{id:[0-9]+}', ProductGetUpdate::class);
+    $app->post('/update/{id:[0-9]+}', ProductUpdate::class);
+    $app->get('/delete/{id:[0-9]+}', ProductDelete::class);
+
 };

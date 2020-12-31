@@ -12,7 +12,7 @@ return function (App $app) {
     // Add the Slim built-in routing middleware
     $app->addRoutingMiddleware();
 
-    $app->add(TwigMiddleware::createFromContainer($app));
+    $app->add(TwigMiddleware::class);
 
     $app->add(BasePathMiddleware::class);
 
